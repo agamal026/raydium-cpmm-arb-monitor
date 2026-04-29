@@ -1,0 +1,30 @@
+{
+  "name": "raydium-cpmm-arb-monitor",
+  "version": "0.1.0",
+  "description": "Read-only CLI monitor for Raydium CPMM/standard pool price discrepancies.",
+  "type": "module",
+  "bin": {
+    "raydium-cpmm-arb": "./dist/src/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test dist/test/*.test.js",
+    "start": "node dist/src/index.js",
+    "dev": "tsx src/index.ts"
+  },
+  "keywords": [
+    "solana",
+    "raydium",
+    "cpmm",
+    "arbitrage",
+    "monitor",
+    "cli"
+  ],
+  "author": "agamal026",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}
