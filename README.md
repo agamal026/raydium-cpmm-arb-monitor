@@ -1,22 +1,12 @@
 # Raydium CPMM Arbitrage Monitor
 
-Read-only CLI monitor for Raydium CPMM/standard pool price discrepancies. It was built for the Superteam Earn bounty "Create an open-source, real-time arbitrage monitoring tool for Raydium CPMM".
+Read-only CLI monitor for Raydium CPMM/standard pool price discrepancies.
 
 The tool does not trade, sign transactions, custody funds, or require private keys. It discovers Raydium standard/CPMM pools for a token pair, polls live pool data, normalizes prices into one base/quote direction, ranks cross-pool buy/sell spreads, and reports estimated net profit after pool fees and a configurable transaction-cost haircut.
 
-## Bounty fit
-
-Submission requirements covered:
-
-- Public GitHub-ready repository.
-- MIT license.
-- CLI interface.
-- Input: two mint addresses.
-- Pool discovery for Raydium `poolType=standard` pools.
-- Live price polling with configurable interval.
-- Net profit calculation: gross price spread minus both pool fees and configurable transaction/priority-fee cost.
-- Structured JSON logs with timestamps and log levels.
-- README with architecture, setup, configuration, usage, formulas, limitations, and sample output.
+Maintained by [agamal026](https://github.com/agamal026). See the
+[changelog](CHANGELOG.md), [contribution guide](CONTRIBUTING.md), and
+[security reporting policy](SECURITY.md). Support is best effort.
 
 ## Architecture
 
@@ -37,10 +27,14 @@ Important design choices:
 
 ## Installation
 
+Use Node.js 22 or newer. CI runs the offline tests on Node.js 22 and 24 on
+Linux and Windows. Tests use fixtures and a local HTTP server; they do not call
+Raydium or a Solana RPC service.
+
 ```bash
 git clone https://github.com/agamal026/raydium-cpmm-arb-monitor.git
 cd raydium-cpmm-arb-monitor
-npm install
+npm ci
 npm test
 npm run build
 ```
@@ -80,13 +74,18 @@ Supported options:
 | `--min-tvl-usd` | `MIN_TVL_USD` | `1000` | Ignore pools below this TVL to avoid dust-pool false positives |
 | `--rpc-url` | `RPC_URL` | empty | Optional read-only RPC health check URL |
 | `--page-size` | `PAGE_SIZE` | `100` | Raydium API page size |
-| `--timeout-ms` | `TIMEOUT_MS` | `12000` | HTTP timeout per request |
+| `--timeout-ms` | `TIMEOUT_MS` | `12000` | HTTP timeout through complete response-body consumption, per attempt |
 | `--retries` | `RETRIES` | `2` | Raydium API retry count |
 | `--json` | `JSON=true` | false | Emit JSON snapshots |
 | `--once` | `ONCE=true` | false | Run one poll and exit |
 | `--log-level` | `LOG_LEVEL` | `info` | `debug`, `info`, `warn`, or `error` |
 
 Never commit private or keyed RPC URLs. If a URL includes a query key, runtime logs redact common `key`, `api_key`, and `token` query parameters.
+
+This redaction is limited: review logs before sharing them, including URL
+userinfo, paths, other query parameters, and provider error messages. RPC health
+checks cap the configured timeout at five seconds. Discovery retries have a
+separate deadline for each attempt and a backoff between attempts.
 
 ## Usage examples
 
@@ -174,18 +173,11 @@ This is a monitoring and research tool, not an execution bot. Reported opportuni
 - Balance, token-account, and rent checks.
 - Risk limits and audit logs.
 
-## Submission checklist
+## Project history
 
-- [x] Public GitHub-ready codebase.
-- [x] MIT license.
-- [x] README includes architecture, setup, config, usage, formulas, and limitations.
-- [x] CLI accepts two mint addresses.
-- [x] Polls Raydium standard pools and reports live price discrepancies.
-- [x] Net profit includes both pool fees and configurable transaction cost.
-- [x] Structured logs and JSON snapshot mode.
-- [x] Tests for price normalization and opportunity scoring.
-- [ ] Record demo video.
-- [ ] Submit repository link on Superteam Earn listing.
+The initial version was built for the Superteam Earn bounty "Create an
+open-source, real-time arbitrage monitoring tool for Raydium CPMM". Historical
+submission notes are in `SUBMISSION.md`; they do not establish a bounty award.
 
 ## Safety
 

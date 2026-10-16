@@ -1,6 +1,6 @@
 {
   "name": "raydium-cpmm-arb-monitor",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Read-only CLI monitor for Raydium CPMM/standard pool price discrepancies.",
   "type": "module",
   "bin": {
@@ -26,5 +26,8 @@
     "@types/node": "^22.15.3",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }
