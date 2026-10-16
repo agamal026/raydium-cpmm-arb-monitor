@@ -21,11 +21,14 @@ export function buildRaydiumPoolUrl(config: Pick<MonitorConfig, "mintA" | "mintB
   return url;
 }
 
-async function fetchWithTimeout(url: URL | string, timeoutMs: number, init?: RequestInit): Promise<Response> {
+async function fetchTextWithTimeout(url: URL | string, timeoutMs: number, init?: RequestInit): Promise<{ response: Response; text: string }> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    return await fetch(url, { ...init, signal: controller.signal });
+    const response = await fetch(url, { ...init, signal: controller.signal });
+    // fetch resolves when headers arrive. Keep the deadline active while the
+    // body is being received too, including an endpoint that stops mid-body.
+    return { response, text: await response.text() };
   } finally {
     clearTimeout(timer);
   }
@@ -36,10 +39,9 @@ export async function discoverPools(config: MonitorConfig): Promise<RaydiumPool[
   let lastError: unknown;
   for (let attempt = 0; attempt <= config.retries; attempt++) {
     try {
-      const response = await fetchWithTimeout(url, config.timeoutMs, {
+      const { response, text } = await fetchTextWithTimeout(url, config.timeoutMs, {
         headers: { accept: "application/json", "user-agent": "raydium-cpmm-arb-monitor/0.1" },
       });
-      const text = await response.text();
       if (!response.ok) throw new Error(`Raydium API ${response.status}: ${text.slice(0, 300)}`);
       const envelope = JSON.parse(text) as RaydiumEnvelope;
       if (!envelope.success) throw new Error(`Raydium API returned success=false: ${envelope.msg ?? text.slice(0, 300)}`);
@@ -55,12 +57,12 @@ export async function discoverPools(config: MonitorConfig): Promise<RaydiumPool[
 export async function checkRpcHealth(rpcUrl: string | undefined, timeoutMs: number): Promise<{ ok: boolean; status: string }> {
   if (!rpcUrl) return { ok: true, status: "not_configured" };
   try {
-    const response = await fetchWithTimeout(rpcUrl, Math.min(timeoutMs, 5_000), {
+    const { text } = await fetchTextWithTimeout(rpcUrl, Math.min(timeoutMs, 5_000), {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ jsonrpc: "2.0", id: "health", method: "getHealth" }),
     });
-    const json = await response.json() as { result?: string; error?: { message?: string } };
+    const json = JSON.parse(text) as { result?: string; error?: { message?: string } };
     if (json.result === "ok") return { ok: true, status: "ok" };
     return { ok: false, status: json.error?.message ?? "non_ok_response" };
   } catch (error) {
